@@ -36,6 +36,11 @@ APPS_FILE="$HOME/.local/share/applications/wallshift.desktop"
 if [ -f "$APPS_FILE" ]; then
     rm -f "$APPS_FILE"
     echo "    removido: $APPS_FILE"
+    # Sem isso, o KDE mantém o atalho no cache do menu (KSycoca) até o
+    # próximo login.
+    if command -v kbuildsycoca6 >/dev/null 2>&1; then
+        kbuildsycoca6 --noincremental >/dev/null 2>&1 || true
+    fi
 else
     echo "    nenhum atalho encontrado em $APPS_FILE"
 fi

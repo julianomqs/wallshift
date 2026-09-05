@@ -110,7 +110,8 @@ else
     # "Exec binary does not exist", mesmo com ~/.local/bin no PATH normal.
     # Confirmado no log real: funcionava rodando manual, mas não após um
     # logout/login de verdade.
-    sed "s|__WALLSHIFT_TRAY_BIN__|$HOME/.local/bin/wallshift-tray|" \
+    sed -e "s|__WALLSHIFT_TRAY_BIN__|$HOME/.local/bin/wallshift-tray|" \
+        -e "s|__WALLSHIFT_ICON_PATH__|$ICON_DEST_DIR/wallshift.svg|" \
         "$SCRIPT_DIR/wallshift.desktop" > "$AUTOSTART_FILE"
     echo "    autostart instalado em $AUTOSTART_FILE"
 fi
@@ -128,6 +129,13 @@ sed -e "s|__WALLSHIFT_TRAY_BIN__|$HOME/.local/bin/wallshift-tray|" \
     -e "s|__WALLSHIFT_ICON_PATH__|$ICON_DEST_DIR/wallshift.svg|" \
     "$SCRIPT_DIR/wallshift-tray.desktop" > "$APPS_FILE"
 echo "    atalho criado em $APPS_FILE"
+
+# O menu de aplicativos do KDE usa um cache (KSycoca) que não percebe
+# sozinho mudanças no .desktop -- sem isso, o atalho só apareceria/
+# atualizaria depois de um logout/login.
+if command -v kbuildsycoca6 >/dev/null 2>&1; then
+    kbuildsycoca6 --noincremental >/dev/null 2>&1 || true
+fi
 
 echo
 echo "==> Instalação concluída."

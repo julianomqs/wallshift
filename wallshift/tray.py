@@ -3,7 +3,11 @@ AyatanaAppIndicator3, o mesmo mecanismo usado por indicadores nativos do
 Plasma) - troca manual de wallpaper, desinstalação e saída.
 """
 
+import fcntl
+import os
 import subprocess
+import sys
+import tempfile
 import threading
 from pathlib import Path
 
@@ -28,6 +32,27 @@ ICON_NAME = "wallshift"
 # do pacote Python instalado via pipx (que roda isolado num venv). Por isso
 # só sabemos achá-lo no local onde o README manda clonar o projeto.
 UNINSTALL_SCRIPT = Path.home() / ".local" / "share" / "wallshift" / "uninstall.sh"
+
+LOCK_FILE_PATH = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", tempfile.gettempdir()), "wallshift-tray.lock"
+)
+# Precisa ficar viva pelo tempo de vida do processo -- o lock é liberado
+# quando o file descriptor fecha (inclusive se o processo morrer/crashar),
+# então basta manter essa referência em vez de gerenciar um arquivo de PID
+# manualmente (que pode ficar "preso" se o processo morrer sem limpar).
+_lock_file_handle = None
+
+
+def _acquire_single_instance_lock():
+    global _lock_file_handle
+    fh = open(LOCK_FILE_PATH, "w")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh.close()
+        return False
+    _lock_file_handle = fh
+    return True
 
 
 class WallshiftTrayApp:
@@ -178,6 +203,14 @@ class WallshiftTrayApp:
 
 
 def main():
+    if not _acquire_single_instance_lock():
+        notify.notify(
+            "wallshift",
+            "Já está rodando - veja o ícone na bandeja.",
+            urgency=notify.URGENCY_NORMAL,
+        )
+        sys.exit(0)
+
     WallshiftTrayApp()
     Gtk.main()
 
