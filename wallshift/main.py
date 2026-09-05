@@ -62,19 +62,22 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    cfg = config.load_config()
     log(f"wallshift iniciado (config: {config.CONFIG_PATH})")
 
     if args.once:
-        success = run_once(cfg)
+        success = run_once(config.load_config())
         sys.exit(0 if success else 1)
 
-    interval_seconds = max(1, cfg["interval_minutes"]) * 60
     try:
         while True:
+            # Relê o config.toml a cada ciclo, assim mudanças (intervalo,
+            # cache_dir, etc.) valem a partir da próxima troca, sem precisar
+            # reiniciar o processo.
+            cfg = config.load_config()
             run_once(cfg)
-            log(f"próxima troca em {cfg['interval_minutes']} minuto(s)")
-            time.sleep(interval_seconds)
+            interval_minutes = cfg["interval_minutes"]
+            log(f"próxima troca em {interval_minutes} minuto(s)")
+            time.sleep(max(1, interval_minutes) * 60)
     except KeyboardInterrupt:
         log("wallshift encerrado pelo usuário")
 
