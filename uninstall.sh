@@ -31,6 +31,15 @@ else
     echo "    nenhum autostart encontrado em $AUTOSTART_FILE"
 fi
 
+echo "==> Removendo atalho do menu de aplicativos..."
+APPS_FILE="$HOME/.local/share/applications/wallshift.desktop"
+if [ -f "$APPS_FILE" ]; then
+    rm -f "$APPS_FILE"
+    echo "    removido: $APPS_FILE"
+else
+    echo "    nenhum atalho encontrado em $APPS_FILE"
+fi
+
 # O cache_dir pode ter sido customizado pelo usuário no config.toml,
 # então lemos o valor real antes de decidir o que apagar.
 CACHE_DIR="$DEFAULT_CACHE_DIR"

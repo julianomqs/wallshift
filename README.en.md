@@ -68,20 +68,34 @@ File: `~/.config/wallshift/config.toml`
 
 ## Usage
 
+Normal usage needs no terminal at all: `wallshift-tray` starts on its own
+at login (autostart), and if you close it with "Sair", you can reopen it
+from the **KDE application menu** (Kickoff/Krunner, search for
+"WallShift") - `install.sh` registers that shortcut.
+
+To run it manually from a terminal (useful for testing or watching logs):
+
 ```bash
 wallshift          # starts the headless loop (changes wallpaper every interval_minutes)
 wallshift --once   # changes the wallpaper once and exits (good for testing)
 wallshift-tray      # same loop, with a tray icon in Plasma
 ```
 
-`wallshift-tray` is what autostart uses by default. The icon (a simple
-landscape glyph, original color scheme) sits in the tray with a menu:
+Typing these commands only works if `~/.local/bin` is already on the
+terminal session's PATH: `install.sh`'s `pipx ensurepath` only edits
+`~/.bashrc` (or equivalent), so a terminal already open before installing
+won't pick that up on its own - open a new terminal, or run
+`source ~/.bashrc`.
+
+The tray icon (a simple landscape glyph, original color scheme) has a menu:
 
 - **Próximo** ("Next") - changes the wallpaper right away, without waiting
   for the interval.
 - **Desinstalar** ("Uninstall") - asks for confirmation and, if confirmed,
   runs `uninstall.sh` and closes the icon.
-- **Sair** ("Quit") - closes the process (does not uninstall anything).
+- **Sair** ("Quit") - closes the process (does not uninstall anything;
+  reopen it from the application menu or by running `wallshift-tray`
+  again).
 
 Logs are plain `print()` calls with a timestamp, straight to stdout - run it
 in a terminal or redirect to a file if you want to keep history.

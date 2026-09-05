@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=WallShift
+Comment=Abre o ícone de troca de papel de parede na bandeja
+Exec=__WALLSHIFT_TRAY_BIN__
+Icon=__WALLSHIFT_ICON_PATH__
+Terminal=false
+StartupNotify=false
+Categories=Utility;

@@ -103,9 +103,31 @@ if grep -Eq '^\s*autostart\s*=\s*false' "$CONFIG_FILE"; then
     echo "    autostart = false em $CONFIG_FILE, removendo entrada de autostart (se existir)"
     rm -f "$AUTOSTART_FILE"
 else
-    cp "$SCRIPT_DIR/wallshift.desktop" "$AUTOSTART_FILE"
+    # Precisa ser caminho absoluto: o systemd-xdg-autostart-generator (que o
+    # Plasma usa pra transformar autostart/*.desktop em serviços systemd
+    # --user) roda cedo demais na sessão e NÃO enxerga o PATH completo do
+    # usuário ainda -- "Exec=wallshift-tray" (nome solto) falha ali com
+    # "Exec binary does not exist", mesmo com ~/.local/bin no PATH normal.
+    # Confirmado no log real: funcionava rodando manual, mas não após um
+    # logout/login de verdade.
+    sed "s|__WALLSHIFT_TRAY_BIN__|$HOME/.local/bin/wallshift-tray|" \
+        "$SCRIPT_DIR/wallshift.desktop" > "$AUTOSTART_FILE"
     echo "    autostart instalado em $AUTOSTART_FILE"
 fi
+
+echo "==> Criando atalho no menu de aplicativos..."
+# Separado do autostart de propósito: essa entrada aparece no menu/launcher
+# do KDE (ex: Kickoff, Krunner) pra dar um jeito de reabrir o wallshift-tray
+# depois de um "Sair" no menu do ícone, sem precisar de terminal - mesmo
+# problema que o deploy-tray (outro projeto do autor) já teve e resolveu
+# do mesmo jeito.
+APPS_DIR="$HOME/.local/share/applications"
+APPS_FILE="$APPS_DIR/wallshift.desktop"
+mkdir -p "$APPS_DIR"
+sed -e "s|__WALLSHIFT_TRAY_BIN__|$HOME/.local/bin/wallshift-tray|" \
+    -e "s|__WALLSHIFT_ICON_PATH__|$ICON_DEST_DIR/wallshift.svg|" \
+    "$SCRIPT_DIR/wallshift-tray.desktop" > "$APPS_FILE"
+echo "    atalho criado em $APPS_FILE"
 
 echo
 echo "==> Instalação concluída."
