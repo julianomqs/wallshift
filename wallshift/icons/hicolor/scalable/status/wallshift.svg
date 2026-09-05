@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- moldura: sugere uma foto/wallpaper -->
-  <rect x="5" y="5" width="54" height="54" rx="11" fill="#153048"/>
-  <rect x="10" y="10" width="44" height="44" rx="7" fill="#1f4a6b"/>
-  <!-- sol -->
-  <circle cx="41" cy="23" r="7" fill="#f2b134"/>
-  <!-- montanhas, duas camadas pra dar profundidade -->
-  <path d="M10 46 L23 28 L32 39 L40 30 L54 46 Z" fill="#1d6b52"/>
-  <path d="M10 46 L19 35 L27 44 L33 46 Z" fill="#154a38"/>
+  <!-- Sem moldura/fundo de propósito: um retângulo escuro se perdia contra
+       o fundo escuro da bandeja (é o que causou o bug de "ícone invisível").
+       Só o glifo, grande e com cores saturadas, pra ficar legível em ~16-24px
+       tanto em tema claro quanto escuro. -->
+  <circle cx="45" cy="18" r="11" fill="#f5b400"/>
+  <path d="M2 54 L26 20 L40 38 L48 26 L62 54 Z" fill="#33b07a"/>
 </svg>
