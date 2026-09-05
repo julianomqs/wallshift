@@ -1,0 +1,102 @@
+# wallshift
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+*[Leia isto em português](README.md)*
+
+Minimalist wallpaper changer for **KDE Plasma**, using Windows Spotlight
+images as its source. Built to replace Variety without the weight of a full
+GUI application.
+
+Exclusive to KDE Plasma on Debian: there is no desktop-environment detection
+nor support for other DEs.
+
+## Installation
+
+```bash
+git clone <this repository> wallshift
+cd wallshift
+./install.sh
+```
+
+`install.sh`:
+1. Installs whatever is missing via `apt` (`pipx`, `qdbus-qt6`), if needed.
+2. Installs the package with `pipx install .`.
+3. Creates `~/.config/wallshift/config.toml` from `config.default.toml`
+   (does not overwrite an existing config).
+4. Registers autostart at `~/.config/autostart/wallshift.desktop`, unless
+   `autostart = false` in config.toml.
+
+## Uninstallation
+
+```bash
+./uninstall.sh
+```
+
+Removes the package (via `pipx uninstall`), the autostart entry, the
+`config.toml`, and the image cache. System dependencies (`pipx`,
+`qdbus-qt6`) are **not** removed, since they may be used by other
+applications or be part of KDE Plasma itself.
+
+## Configuration
+
+File: `~/.config/wallshift/config.toml`
+
+| Key | Default | Description |
+|---|---|---|
+| `interval_minutes` | `30` | interval between wallpaper changes |
+| `autostart` | `true` | controls whether `install.sh` registers autostart in Plasma |
+| `cache_dir` | `~/.cache/wallshift` | folder where downloaded images are kept |
+| `max_cache_images` | `20` | maximum number of images kept in the cache |
+| `country` / `locale` | `US` / `en-US` | region used when querying the Spotlight API |
+
+## Usage
+
+```bash
+wallshift          # starts the loop (changes wallpaper every interval_minutes)
+wallshift --once   # changes the wallpaper once and exits (good for testing)
+```
+
+Logs are plain `print()` calls with a timestamp, straight to stdout - run it
+in a terminal or redirect to a file if you want to keep history.
+
+## How it works
+
+- **`wallshift/source_spotlight.py`**: queries the Windows Spotlight v4 API
+  (`fd.api.iris.microsoft.com`), used by Windows 11 for lockscreen and
+  wallpaper (images up to 4K). The endpoint and parameters were confirmed
+  against the
+  [ORelio/Spotlight-Downloader](https://github.com/ORelio/Spotlight-Downloader/blob/master/SpotlightAPI.md)
+  project's documentation. This API isn't officially documented by
+  Microsoft and may change without notice - so any failure here is caught
+  and logged, never crashes the process.
+- **`wallshift/cache.py`**: downloads the chosen image into `cache_dir` and
+  keeps at most `max_cache_images` files, deleting the oldest ones.
+- **`wallshift/setter.py`**: applies the wallpaper by running a script
+  against the `plasmashell` scripting API (`org.kde.PlasmaShell.evaluateScript`
+  via `qdbus6`/`qdbus`) - the same mechanism Plasma itself uses internally
+  to change wallpaper.
+- **`wallshift/main.py`**: main loop; the config file is re-read on every
+  cycle, so editing `config.toml` (interval, cache dir, etc.) takes effect
+  on the next cycle without restarting the process. If any step fails
+  (network down, plasmashell not running, etc.), the error is logged and
+  the current wallpaper is left untouched until the next cycle.
+
+## Tested on
+
+- **Actually tested**: Debian 13 (trixie), KDE Plasma 6, using `qdbus6`
+  (`qdbus-qt6` package) - installation, API fetch, download, and wallpaper
+  change all confirmed on this environment.
+- **Should work, not tested**: Debian 12 (bookworm) with KDE Plasma 5, using
+  `qdbus` (`setter.py` already tries `qdbus6` first and falls back to
+  `qdbus`, and the `evaluateScript` method has existed since Plasma 5).
+- **Out of scope**: any desktop environment other than KDE Plasma (GNOME,
+  XFCE, etc.) - no DE detection or fallback, by design.
+
+## Known limitations
+
+- The Spotlight API is unofficial (reverse-engineered); changes to
+  Microsoft's response format may break `source_spotlight.py` without
+  warning.
+- No graphical configuration UI: edit `config.toml` directly - most
+  settings take effect on the next cycle automatically, without a restart.

@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+*[Read this in English](README.en.md)*
+
 Trocador minimalista de papel de parede para **KDE Plasma**, usando as imagens
 do **Windows Spotlight** como fonte. Feito para substituir o Variety sem o
 peso de uma aplicação GUI completa.
@@ -24,6 +26,17 @@ O `install.sh`:
    (não sobrescreve um config já existente).
 4. Registra o autostart em `~/.config/autostart/wallshift.desktop`, a menos
    que `autostart = false` no config.toml.
+
+## Desinstalação
+
+```bash
+./uninstall.sh
+```
+
+Remove o pacote (via `pipx uninstall`), o autostart, o `config.toml` e o
+cache de imagens. As dependências de sistema (`pipx`, `qdbus-qt6`) **não**
+são removidas, já que podem ser usadas por outras aplicações ou fazer parte
+do próprio KDE Plasma.
 
 ## Configuração
 
@@ -63,15 +76,28 @@ terminal ou redirecione para um arquivo se quiser guardar histórico.
   scripting do `plasmashell` (`org.kde.PlasmaShell.evaluateScript` via
   `qdbus6`/`qdbus`) - o mesmo mecanismo usado internamente pelo próprio
   Plasma para trocar wallpaper.
-- **`wallshift/main.py`**: loop principal; se qualquer etapa falhar (rede
+- **`wallshift/main.py`**: loop principal; o config.toml é relido a cada
+  ciclo, então editar `interval_minutes`, `cache_dir` etc. vale a partir do
+  próximo ciclo, sem reiniciar o processo. Se qualquer etapa falhar (rede
   fora, plasmashell não rodando, etc.), o erro é logado e o wallpaper atual
   é mantido até o próximo ciclo.
+
+## Testado em
+
+- **Testado de fato**: Debian 13 (trixie), KDE Plasma 6, usando `qdbus6`
+  (pacote `qdbus-qt6`) - instalação, busca na API, download e troca de
+  wallpaper confirmados nesse ambiente.
+- **Deve funcionar, mas não testado**: Debian 12 (bookworm) com KDE Plasma 5,
+  usando `qdbus` (o `setter.py` já tenta `qdbus6` e cai para `qdbus`
+  automaticamente, e o método `evaluateScript` existe desde o Plasma 5).
+- **Fora de escopo**: qualquer ambiente que não seja KDE Plasma (GNOME, XFCE,
+  etc.) - não há detecção de DE nem fallback, de propósito.
 
 ## Limitações conhecidas
 
 - A API do Spotlight é nao-oficial (engenharia reversa); mudanças no
   formato de resposta da Microsoft podem quebrar `source_spotlight.py` sem
   aviso prévio.
-- Sem interface gráfica de configuração: edite `config.toml` diretamente e
-  reinicie o `wallshift` (ou aguarde o próximo ciclo, para a maioria das
-  opções).
+- Sem interface gráfica de configuração: edite `config.toml` diretamente -
+  a maioria das opções vale a partir do próximo ciclo, automaticamente, sem
+  precisar reiniciar.
