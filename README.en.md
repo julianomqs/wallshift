@@ -13,13 +13,23 @@ nor support for other DEs.
 
 ## Installation
 
+One-liner, no manual cloning (it self-clones into
+`~/.local/share/wallshift`):
+
 ```bash
-git clone <this repository> wallshift
-cd wallshift
+curl -fsSL https://raw.githubusercontent.com/julianomqs/wallshift/master/install.sh | bash
+```
+
+Or clone first:
+
+```bash
+git clone https://github.com/julianomqs/wallshift.git ~/.local/share/wallshift
+cd ~/.local/share/wallshift
 ./install.sh
 ```
 
-`install.sh`:
+It's safe to re-run `install.sh` at any time (it won't overwrite the
+config or duplicate autostart). `install.sh`:
 1. Installs whatever is missing via `apt` (`pipx`, `qdbus-qt6`, `python3-gi`,
    `gir1.2-ayatanaappindicator3-0.1`), if needed.
 2. Installs the package with `pipx install --system-site-packages .` (the
@@ -34,8 +44,10 @@ cd wallshift
 ## Uninstallation
 
 ```bash
-./uninstall.sh
+~/.local/share/wallshift/uninstall.sh
 ```
+
+(or via the tray icon's "Desinstalar" menu item, which runs the same script)
 
 Removes the package (via `pipx uninstall`), the autostart entry, the
 `config.toml`, and the image cache. System dependencies (`pipx`,

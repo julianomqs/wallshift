@@ -1,9 +1,38 @@
 #!/usr/bin/env bash
 # Instala o wallshift: dependências de sistema, o pacote via pipx,
 # o config.toml e o autostart do KDE Plasma.
+#
+# Funciona de dois jeitos:
+#  - Rodado localmente de dentro do repo (./install.sh): usa a pasta onde
+#    este arquivo está.
+#  - Rodado via "curl ... | bash" (sem repo local ainda): clona pra
+#    ~/.local/share/wallshift primeiro (repositório público, clone via
+#    HTTPS, sem precisar de chave SSH).
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/julianomqs/wallshift.git"
+INSTALL_DIR="$HOME/.local/share/wallshift"
+
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    # Existe um arquivo real no disco -- rodando localmente (clone/checkout
+    # já existente, aqui ou em outro lugar).
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+    # Sem arquivo real -- rodando via "curl ... | bash", não tem checkout ainda.
+    echo "Sem checkout local -- preparando em $INSTALL_DIR"
+    if ! command -v git >/dev/null 2>&1; then
+        echo "==> Instalando git via apt (vai pedir sua senha do sudo)"
+        sudo apt-get update
+        sudo apt-get install -y git
+    fi
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        git -C "$INSTALL_DIR" pull --ff-only
+    else
+        git clone "$REPO_URL" "$INSTALL_DIR"
+    fi
+    SCRIPT_DIR="$INSTALL_DIR"
+fi
+
 CONFIG_DIR="$HOME/.config/wallshift"
 CONFIG_FILE="$CONFIG_DIR/config.toml"
 AUTOSTART_DIR="$HOME/.config/autostart"

@@ -27,7 +27,7 @@ ICON_NAME = "wallshift"
 # O uninstall.sh é um script solto no checkout do repositório, não faz parte
 # do pacote Python instalado via pipx (que roda isolado num venv). Por isso
 # só sabemos achá-lo no local onde o README manda clonar o projeto.
-UNINSTALL_SCRIPT = Path.home() / "wallshift" / "uninstall.sh"
+UNINSTALL_SCRIPT = Path.home() / ".local" / "share" / "wallshift" / "uninstall.sh"
 
 
 class WallshiftTrayApp:
