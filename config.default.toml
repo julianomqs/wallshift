@@ -1,0 +1,20 @@
+# Configuração padrão do wallshift.
+# Copiado para ~/.config/wallshift/config.toml na primeira instalação
+# (install.sh não sobrescreve um config.toml já existente).
+
+# Intervalo entre trocas de wallpaper, em minutos.
+interval_minutes = 30
+
+# Se true, o install.sh registra o wallshift para iniciar junto com o KDE Plasma.
+autostart = true
+
+# Pasta onde as imagens baixadas do Spotlight ficam guardadas.
+cache_dir = "~/.cache/wallshift"
+
+# Quantidade máxima de imagens mantidas no cache; as mais antigas são apagadas.
+max_cache_images = 20
+
+# País e idioma usados na consulta à API do Windows Spotlight.
+# Países/idiomas diferentes retornam conjuntos de imagens diferentes.
+country = "US"
+locale = "en-US"
