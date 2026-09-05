@@ -46,6 +46,19 @@ echo "==> Instalando o pacote wallshift com pipx..."
 pipx install --force --system-site-packages "$SCRIPT_DIR"
 pipx ensurepath || true
 
+echo "==> Instalando o ícone da bandeja..."
+# set_icon_theme_path (dentro do tray.py) sozinho não é confiável -- na
+# prática o Plasma só resolve o ícone pelo nome se ele estiver de fato no
+# local padrão do XDG (~/.local/share/icons/hicolor/...), então copiamos
+# pra lá também. gtk-update-icon-cache é best-effort (nem todo tema exige).
+ICON_DEST_DIR="$HOME/.local/share/icons/hicolor/scalable/status"
+mkdir -p "$ICON_DEST_DIR"
+cp "$SCRIPT_DIR/wallshift/icons/hicolor/scalable/status/wallshift.svg" "$ICON_DEST_DIR/wallshift.svg"
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+fi
+echo "    ícone instalado em $ICON_DEST_DIR/wallshift.svg"
+
 echo "==> Preparando configuração em $CONFIG_FILE"
 mkdir -p "$CONFIG_DIR"
 if [ ! -f "$CONFIG_FILE" ]; then
