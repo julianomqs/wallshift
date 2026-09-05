@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- moldura: sugere uma foto/wallpaper -->
+  <rect x="5" y="5" width="54" height="54" rx="11" fill="#153048"/>
+  <rect x="10" y="10" width="44" height="44" rx="7" fill="#1f4a6b"/>
+  <!-- sol -->
+  <circle cx="41" cy="23" r="7" fill="#f2b134"/>
+  <!-- montanhas, duas camadas pra dar profundidade -->
+  <path d="M10 46 L23 28 L32 39 L40 30 L54 46 Z" fill="#1d6b52"/>
+  <path d="M10 46 L19 35 L27 44 L33 46 Z" fill="#154a38"/>
+</svg>

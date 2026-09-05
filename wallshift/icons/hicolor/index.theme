@@ -1,0 +1,11 @@
+[Icon Theme]
+Name=hicolor
+Comment=Ícone de status do wallshift
+Directories=scalable/status
+
+[scalable/status]
+Size=64
+Type=Scalable
+MinSize=16
+MaxSize=512
+Context=Status

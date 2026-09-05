@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 wallshift = "wallshift.main:main"
+wallshift-tray = "wallshift.tray:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["wallshift"]

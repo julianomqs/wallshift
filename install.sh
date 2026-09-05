@@ -21,6 +21,15 @@ if ! command -v qdbus6 >/dev/null 2>&1 && ! command -v qdbus >/dev/null 2>&1; th
     apt_packages+=("qdbus-qt6")
 fi
 
+# Necessários pro ícone da bandeja (wallshift-tray): bindings Python do GTK
+# e o AppIndicator3 usado pra registrar o ícone via StatusNotifierItem.
+if ! python3 -c "import gi" >/dev/null 2>&1; then
+    apt_packages+=("python3-gi")
+fi
+if ! python3 -c "import gi; gi.require_version('AyatanaAppIndicator3', '0.1'); from gi.repository import AyatanaAppIndicator3" >/dev/null 2>&1; then
+    apt_packages+=("gir1.2-ayatanaappindicator3-0.1")
+fi
+
 if [ "${#apt_packages[@]}" -gt 0 ]; then
     echo "==> Instalando via apt: ${apt_packages[*]} (vai pedir sua senha do sudo)"
     sudo apt-get update
@@ -30,7 +39,11 @@ else
 fi
 
 echo "==> Instalando o pacote wallshift com pipx..."
-pipx install --force "$SCRIPT_DIR"
+# --system-site-packages: o wallshift-tray precisa do 'gi' (PyGObject) do
+# sistema, que não é instalável via pip sem headers de desenvolvimento do
+# GTK. Sem essa flag, o venv isolado do pipx não enxergaria o pacote
+# python3-gi instalado acima.
+pipx install --force --system-site-packages "$SCRIPT_DIR"
 pipx ensurepath || true
 
 echo "==> Preparando configuração em $CONFIG_FILE"
@@ -54,7 +67,8 @@ fi
 
 echo
 echo "==> Instalação concluída."
-echo "    Teste agora com:   wallshift --once"
-echo "    Configuração em:   $CONFIG_FILE"
-echo "    Se 'wallshift' não for encontrado, abra um terminal novo (pipx ensurepath"
-echo "    adiciona ~/.local/bin ao PATH apenas em sessões futuras)."
+echo "    Teste agora com:      wallshift --once"
+echo "    Ícone na bandeja:     wallshift-tray"
+echo "    Configuração em:      $CONFIG_FILE"
+echo "    Se os comandos não forem encontrados, abra um terminal novo (pipx"
+echo "    ensurepath adiciona ~/.local/bin ao PATH apenas em sessões futuras)."

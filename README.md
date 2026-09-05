@@ -20,12 +20,16 @@ cd wallshift
 ```
 
 O `install.sh`:
-1. Instala via `apt` o que estiver faltando (`pipx`, `qdbus-qt6`), se necessário.
-2. Instala o pacote com `pipx install .`.
+1. Instala via `apt` o que estiver faltando (`pipx`, `qdbus-qt6`, `python3-gi`,
+   `gir1.2-ayatanaappindicator3-0.1`), se necessário.
+2. Instala o pacote com `pipx install --system-site-packages .` (o
+   `--system-site-packages` é necessário pro ícone da bandeja enxergar o
+   `gi`/GTK do sistema).
 3. Cria `~/.config/wallshift/config.toml` a partir de `config.default.toml`
    (não sobrescreve um config já existente).
 4. Registra o autostart em `~/.config/autostart/wallshift.desktop`, a menos
-   que `autostart = false` no config.toml.
+   que `autostart = false` no config.toml (autostart aponta pro
+   `wallshift-tray`, com ícone na bandeja).
 
 ## Desinstalação
 
@@ -53,9 +57,18 @@ Arquivo: `~/.config/wallshift/config.toml`
 ## Uso
 
 ```bash
-wallshift          # inicia o loop (troca a cada interval_minutes)
+wallshift          # inicia o loop headless (troca a cada interval_minutes)
 wallshift --once   # troca o wallpaper uma vez e sai (bom pra testar)
+wallshift-tray      # igual ao loop, mas com ícone na bandeja do Plasma
 ```
+
+O `wallshift-tray` é o que o autostart usa por padrão. O ícone (uma
+paisagem simples, cor própria) fica na bandeja com um menu:
+
+- **Próximo** - troca o wallpaper na hora, sem esperar o intervalo.
+- **Desinstalar** - pede confirmação e, se confirmado, roda o
+  `uninstall.sh` e fecha o ícone.
+- **Sair** - fecha o processo (não desinstala nada).
 
 Os logs são simples `print()` com timestamp, direto no stdout - rode em um
 terminal ou redirecione para um arquivo se quiser guardar histórico.
@@ -76,11 +89,18 @@ terminal ou redirecione para um arquivo se quiser guardar histórico.
   scripting do `plasmashell` (`org.kde.PlasmaShell.evaluateScript` via
   `qdbus6`/`qdbus`) - o mesmo mecanismo usado internamente pelo próprio
   Plasma para trocar wallpaper.
-- **`wallshift/main.py`**: loop principal; o config.toml é relido a cada
-  ciclo, então editar `interval_minutes`, `cache_dir` etc. vale a partir do
-  próximo ciclo, sem reiniciar o processo. Se qualquer etapa falhar (rede
-  fora, plasmashell não rodando, etc.), o erro é logado e o wallpaper atual
-  é mantido até o próximo ciclo.
+- **`wallshift/main.py`**: loop principal (headless); o config.toml é relido
+  a cada ciclo, então editar `interval_minutes`, `cache_dir` etc. vale a
+  partir do próximo ciclo, sem reiniciar o processo. Se qualquer etapa
+  falhar (rede fora, plasmashell não rodando, etc.), o erro é logado e o
+  wallpaper atual é mantido até o próximo ciclo.
+- **`wallshift/tray.py`**: ícone na bandeja via GTK3 + AyatanaAppIndicator3
+  (StatusNotifierItem) - reaproveita o mesmo `run_once` do `main.py`, só
+  troca a execução bloqueante por uma thread + `GLib.idle_add` pra não
+  travar o ícone.
+- **`wallshift/notify.py`**: notificações nativas via D-Bus
+  (`org.freedesktop.Notifications`), usadas pelo tray pra avisar sucesso ou
+  falha.
 
 ## Testado em
 

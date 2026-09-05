@@ -2,7 +2,7 @@
 Type=Application
 Name=WallShift
 Comment=Troca automática de papel de parede via Windows Spotlight
-Exec=wallshift
+Exec=wallshift-tray
 Icon=preferences-desktop-wallpaper
 Terminal=false
 Categories=Utility;
