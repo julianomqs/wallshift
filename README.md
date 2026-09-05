@@ -1,5 +1,7 @@
 # wallshift
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Trocador minimalista de papel de parede para **KDE Plasma**, usando as imagens
 do **Windows Spotlight** como fonte. Feito para substituir o Variety sem o
 peso de uma aplicação GUI completa.
