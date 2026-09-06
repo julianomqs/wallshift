@@ -78,6 +78,9 @@ def set_wallpaper(image_path: Path) -> None:
     try:
         result = subprocess.run(
             [qdbus, PLASMA_SERVICE, PLASMA_OBJECT, PLASMA_METHOD, script],
+            stdin=subprocess.DEVNULL,  # não deveria precisar de input nenhum;
+            # sem isso, uma tentativa de leitura interativa travaria pra
+            # sempre em vez de falhar rápido.
             capture_output=True,
             text=True,
             timeout=TIMEOUT_SECONDS,

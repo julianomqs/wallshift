@@ -1,11 +1,38 @@
 """Loop principal do daemon wallshift."""
 
 import argparse
+import fcntl
+import os
 import sys
+import tempfile
 import time
 from datetime import datetime
 
 from wallshift import cache, config, setter, source_spotlight
+
+# Compartilhada entre o loop headless (main(), abaixo) e o wallshift-tray:
+# as duas formas de rodar o wallshift disputam o mesmo cache_dir e chamam o
+# mesmo qdbus, então só uma instância (de qualquer uma delas) por vez.
+LOCK_FILE_PATH = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", tempfile.gettempdir()), "wallshift.lock"
+)
+# Precisa ficar viva pelo tempo de vida do processo -- o lock é liberado
+# quando o file descriptor fecha (inclusive se o processo morrer/crashar),
+# então basta manter essa referência em vez de gerenciar um arquivo de PID
+# manualmente (que pode ficar "preso" se o processo morrer sem limpar).
+_lock_file_handle = None
+
+
+def acquire_single_instance_lock() -> bool:
+    global _lock_file_handle
+    fh = open(LOCK_FILE_PATH, "w")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        fh.close()
+        return False
+    _lock_file_handle = fh
+    return True
 
 
 def log(message: str) -> None:
@@ -71,8 +98,15 @@ def main() -> None:
     log(f"wallshift iniciado (config: {config.CONFIG_PATH})")
 
     if args.once:
+        # --once é pra teste manual rápido (ex: conferir uma mudança de
+        # config) - não entra em loop, então não compete de verdade com uma
+        # instância contínua já rodando; não trava por causa disso.
         success = run_once(config.load_config())
         sys.exit(0 if success else 1)
+
+    if not acquire_single_instance_lock():
+        log("já existe uma instância do wallshift rodando (headless ou com bandeja) - saindo.")
+        sys.exit(1)
 
     try:
         while True:

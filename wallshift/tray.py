@@ -3,11 +3,8 @@ AyatanaAppIndicator3, o mesmo mecanismo usado por indicadores nativos do
 Plasma) - troca manual de wallpaper, desinstalação e saída.
 """
 
-import fcntl
-import os
 import subprocess
 import sys
-import tempfile
 import threading
 from pathlib import Path
 
@@ -18,7 +15,13 @@ gi.require_version("AyatanaAppIndicator3", "0.1")
 from gi.repository import GLib, Gtk, AyatanaAppIndicator3 as AppIndicator3
 
 from . import config, notify
-from .main import run_once
+from .main import acquire_single_instance_lock, run_once
+
+# Tempo máximo pro uninstall.sh terminar (pipx uninstall + alguns rm -rf,
+# sem chamada de rede esperada) -- generoso, mas com um teto: sem isso, um
+# travamento no script deixaria o subprocess (e a thread que espera por
+# ele) pendurado pra sempre.
+UNINSTALL_TIMEOUT_SECONDS = 30
 
 ICONS_DIR = str(Path(__file__).parent / "icons")
 
@@ -32,27 +35,6 @@ ICON_NAME = "wallshift"
 # do pacote Python instalado via pipx (que roda isolado num venv). Por isso
 # só sabemos achá-lo no local onde o README manda clonar o projeto.
 UNINSTALL_SCRIPT = Path.home() / ".local" / "share" / "wallshift" / "uninstall.sh"
-
-LOCK_FILE_PATH = os.path.join(
-    os.environ.get("XDG_RUNTIME_DIR", tempfile.gettempdir()), "wallshift-tray.lock"
-)
-# Precisa ficar viva pelo tempo de vida do processo -- o lock é liberado
-# quando o file descriptor fecha (inclusive se o processo morrer/crashar),
-# então basta manter essa referência em vez de gerenciar um arquivo de PID
-# manualmente (que pode ficar "preso" se o processo morrer sem limpar).
-_lock_file_handle = None
-
-
-def _acquire_single_instance_lock():
-    global _lock_file_handle
-    fh = open(LOCK_FILE_PATH, "w")
-    try:
-        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        fh.close()
-        return False
-    _lock_file_handle = fh
-    return True
 
 
 class WallshiftTrayApp:
@@ -71,6 +53,22 @@ class WallshiftTrayApp:
 
         self._busy = False
         self._cycle_timeout_id = None
+        # Só um diálogo modal (hoje, só o de "Desinstalar") por vez -- sem
+        # isso, o dialog.run() do GTK roda um loop aninhado que ainda
+        # processa outros cliques do menu, deixando abrir um segundo
+        # diálogo (ou disparar "Sair"/"Próximo") antes do primeiro ser
+        # respondido. Mesmo bug encontrado e corrigido no deploy-tray.
+        self._dialog_open = False
+        # Evita rodar dois uninstall.sh ao mesmo tempo se "Desinstalar" for
+        # confirmado de novo enquanto o primeiro ainda está rodando (a
+        # janela existe porque _dialog_open já volta a False assim que o
+        # diálogo fecha, antes do uninstall.sh terminar).
+        self._uninstalling = False
+        # Marcado ao clicar "Sair", pra ciclos em andamento saberem que não
+        # devem mais notificar nem reagendar - Gtk.main_quit() não impede um
+        # callback já em voo (ex: um ciclo terminando na hora do clique) de
+        # rodar antes do loop parar de vez.
+        self._quitting = False
 
         self._build_menu()
         self._run_cycle()  # já troca uma vez ao iniciar, igual o daemon headless
@@ -89,7 +87,7 @@ class WallshiftTrayApp:
         menu.append(uninstall_item)
 
         quit_item = Gtk.MenuItem(label="Sair")
-        quit_item.connect("activate", lambda *_: Gtk.main_quit())
+        quit_item.connect("activate", self._on_quit_clicked)
         menu.append(quit_item)
 
         menu.show_all()
@@ -98,11 +96,20 @@ class WallshiftTrayApp:
     # -- troca de wallpaper, manual (menu) ou automática (timer) -------------
 
     def _on_next(self, _item):
+        if self._dialog_open:
+            notify.notify("wallshift", "Já tem uma confirmação pendente - responda ela primeiro.")
+            return
         if self._busy:
             notify.notify("wallshift", "Já tem uma troca em andamento, aguarde terminar.")
             return
         self._cancel_scheduled_cycle()
         self._run_cycle()
+
+    def _on_quit_clicked(self, _item):
+        if self._dialog_open:
+            return
+        self._quitting = True
+        Gtk.main_quit()
 
     def _run_cycle(self):
         # A busca/download/troca é bloqueante (rede + subprocess do qdbus),
@@ -118,6 +125,11 @@ class WallshiftTrayApp:
 
     def _on_cycle_finished(self, success, cfg):
         self._busy = False
+        if self._quitting:
+            # O app já está fechando (usuário clicou "Sair" enquanto esse
+            # ciclo rodava em background) - notificar ou reagendar um novo
+            # ciclo não faz sentido nesse ponto.
+            return False
         if not success:
             notify.notify(
                 "wallshift",
@@ -143,35 +155,45 @@ class WallshiftTrayApp:
     # -- desinstalação ---------------------------------------------------------
 
     def _on_uninstall(self, _item):
-        dialog = Gtk.Dialog(title="Desinstalar wallshift")
-        dialog.add_buttons(
-            "Cancelar", Gtk.ResponseType.CANCEL,
-            "Desinstalar", Gtk.ResponseType.OK,
-        )
+        if self._dialog_open:
+            return
+        self._dialog_open = True
 
-        content = dialog.get_content_area()
-        content.set_border_width(12)
-        content.set_spacing(8)
+        try:
+            dialog = Gtk.Dialog(title="Desinstalar wallshift")
+            dialog.add_buttons(
+                "Cancelar", Gtk.ResponseType.CANCEL,
+                "Desinstalar", Gtk.ResponseType.OK,
+            )
 
-        message = Gtk.Label(
-            label=(
-                f"Isso roda {UNINSTALL_SCRIPT.name}: remove o pacote (pipx),\n"
-                "o autostart, o config.toml e o cache de imagens.\n"
-                "Não pode ser desfeito."
-            ),
-            xalign=0,
-        )
-        message.set_line_wrap(True)
-        content.add(message)
+            content = dialog.get_content_area()
+            content.set_border_width(12)
+            content.set_spacing(8)
 
-        dialog.show_all()
-        response = dialog.run()
-        dialog.destroy()
+            message = Gtk.Label(
+                label=(
+                    f"Isso roda {UNINSTALL_SCRIPT.name}: remove o pacote (pipx),\n"
+                    "o autostart, o config.toml e o cache de imagens.\n"
+                    "Não pode ser desfeito."
+                ),
+                xalign=0,
+            )
+            message.set_line_wrap(True)
+            content.add(message)
+
+            dialog.show_all()
+            response = dialog.run()
+            dialog.destroy()
+        finally:
+            self._dialog_open = False
 
         if response == Gtk.ResponseType.OK:
             self._do_uninstall()
 
     def _do_uninstall(self):
+        if self._uninstalling:
+            return  # já tem um uninstall.sh rodando, não dispara outro
+
         if not UNINSTALL_SCRIPT.is_file():
             notify.notify(
                 "wallshift",
@@ -180,33 +202,61 @@ class WallshiftTrayApp:
             )
             return
 
-        result = subprocess.run(
-            ["bash", str(UNINSTALL_SCRIPT)], capture_output=True, text=True
-        )
+        # bash uninstall.sh roda de verdade (pipx uninstall + alguns rm -rf)
+        # - numa thread separada, pro ícone/menu não travarem se o script
+        # demorar ou pendurar por algum motivo (com timeout como rede de
+        # segurança de qualquer jeito).
+        self._uninstalling = True
+        threading.Thread(target=self._do_uninstall_in_thread, daemon=True).start()
+
+    def _do_uninstall_in_thread(self):
+        try:
+            result = subprocess.run(
+                ["bash", str(UNINSTALL_SCRIPT)],
+                stdin=subprocess.DEVNULL,  # não deveria pedir nada interativo;
+                # sem isso, uma leitura de stdin travaria pra sempre.
+                capture_output=True,
+                text=True,
+                timeout=UNINSTALL_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            GLib.idle_add(
+                self._on_uninstall_finished,
+                False,
+                f"uninstall.sh não respondeu em {UNINSTALL_TIMEOUT_SECONDS}s - "
+                "pode ter parado no meio, confira manualmente.",
+            )
+            return
 
         if result.returncode == 0:
-            notify.notify(
-                "wallshift desinstalado",
+            GLib.idle_add(
+                self._on_uninstall_finished,
+                True,
                 "Pacote, autostart, config.toml e cache removidos.",
             )
         else:
             detalhe = (result.stderr or result.stdout or "sem detalhes").strip()[-300:]
-            notify.notify(
-                "wallshift: erro ao desinstalar",
-                detalhe,
-                urgency=notify.URGENCY_CRITICAL,
-            )
+            GLib.idle_add(self._on_uninstall_finished, False, detalhe)
 
-        # Sai de qualquer jeito: mesmo com erro parcial, não faz sentido
-        # continuar rodando um ícone de um app que acabamos de tentar remover.
+    def _on_uninstall_finished(self, success, message):
+        if success:
+            notify.notify("wallshift desinstalado", message)
+        else:
+            notify.notify("wallshift: erro ao desinstalar", message, urgency=notify.URGENCY_CRITICAL)
+
+        # Sai de qualquer jeito: mesmo com erro parcial (ou timeout), não faz
+        # sentido continuar rodando um ícone de um app que acabamos de tentar
+        # remover.
+        self._quitting = True
         Gtk.main_quit()
+        return False  # GLib.idle_add: não repetir
 
 
 def main():
-    if not _acquire_single_instance_lock():
+    if not acquire_single_instance_lock():
         notify.notify(
             "wallshift",
-            "Já está rodando - veja o ícone na bandeja.",
+            "Já tem uma instância do wallshift rodando (com ou sem ícone na bandeja).",
             urgency=notify.URGENCY_NORMAL,
         )
         sys.exit(0)
