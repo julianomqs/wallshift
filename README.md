@@ -107,9 +107,15 @@ terminal ou redirecione para um arquivo se quiser guardar histórico.
   [ORelio/Spotlight-Downloader](https://github.com/ORelio/Spotlight-Downloader/blob/master/SpotlightAPI.md).
   Essa API não é documentada oficialmente pela Microsoft e pode mudar sem
   aviso - por isso qualquer falha aqui é tratada e logada, nunca derruba o
-  processo.
+  processo. O pool de imagens por país/idioma é pequeno (testado na
+  prática: ~10 imagens distintas em 6 chamadas seguidas) - por isso
+  `get_random_image` evita repetir uma imagem que ainda esteja no cache,
+  caindo de volta pro sorteio livre só se todas as opções já tiverem sido
+  vistas recentemente.
 - **`wallshift/cache.py`**: baixa a imagem escolhida para `cache_dir` e
   mantém no máximo `max_cache_images` arquivos, apagando os mais antigos.
+  Esse mesmo cache é o que `main.py` consulta pra saber quais imagens
+  evitar repetir.
 - **`wallshift/setter.py`**: aplica o wallpaper rodando um script na API de
   scripting do `plasmashell` (`org.kde.PlasmaShell.evaluateScript` via
   `qdbus6`/`qdbus`) - o mesmo mecanismo usado internamente pelo próprio

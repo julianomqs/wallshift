@@ -139,7 +139,23 @@ def fetch_images(country: str = "US", locale: str = "en-US", count: int = 4) -> 
     return images
 
 
-def get_random_image(country: str = "US", locale: str = "en-US") -> dict:
-    """Busca um lote de imagens e devolve uma escolhida aleatoriamente."""
+def get_random_image(
+    country: str = "US", locale: str = "en-US", exclude_filenames: set[str] | None = None
+) -> dict:
+    """Busca um lote de imagens e devolve uma escolhida aleatoriamente.
+
+    O pool de imagens do Spotlight por país/idioma é pequeno (girou só ~10
+    imagens distintas em 6 chamadas seguidas, testado na prática) - com uma
+    troca a cada poucos minutos, repetir é praticamente garantido sem
+    alguma forma de evitar. `exclude_filenames` deixa passar os nomes de
+    arquivo já usados recentemente (normalmente os que ainda estão no
+    cache); preferimos qualquer candidato de fora dessa lista, e só caímos
+    de volta pro sorteio livre entre os 4 se TODOS já tiverem sido vistos
+    (senão o ciclo travaria sem imagem nenhuma pra mostrar).
+    """
     images = fetch_images(country=country, locale=locale, count=4)
+    if exclude_filenames:
+        candidates = [img for img in images if img["filename"] not in exclude_filenames]
+        if candidates:
+            return random.choice(candidates)
     return random.choice(images)

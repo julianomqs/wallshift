@@ -21,9 +21,15 @@ def run_once(cfg: dict) -> bool:
     loga o erro e devolve False - o wallpaper atual permanece intocado e o
     processo NÃO deve travar nem encerrar por causa disso.
     """
+    # Evita repetir uma imagem que ainda está no cache (o pool do Spotlight
+    # por país/idioma é pequeno, então sem isso repetir é praticamente
+    # garantido). max_cache_images já controla o quanto de histórico vale
+    # olhar pra trás - não precisa de um estado novo separado pra isso.
+    recent_filenames = {p.name for p in cache.list_cached_images(cfg["cache_dir"])}
+
     try:
         image = source_spotlight.get_random_image(
-            country=cfg["country"], locale=cfg["locale"]
+            country=cfg["country"], locale=cfg["locale"], exclude_filenames=recent_filenames
         )
     except source_spotlight.SpotlightError as exc:
         log(f"ERRO ao buscar imagem no Spotlight: {exc}")
