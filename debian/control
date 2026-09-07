@@ -1,0 +1,29 @@
+Source: wallshift
+Section: kde
+Priority: optional
+Maintainer: Juliano Marques <julianomqs@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               pybuild-plugin-pyproject,
+               python3-hatchling,
+               python3-all
+Standards-Version: 4.6.2
+Homepage: https://github.com/julianomqs/wallshift
+Rules-Requires-Root: no
+
+Package: wallshift
+Architecture: all
+Depends: ${python3:Depends},
+         ${misc:Depends},
+         python3-requests,
+         python3-gi,
+         gir1.2-ayatanaappindicator3-0.1,
+         qdbus-qt6 | qdbus-qt5
+Description: minimalist wallpaper changer for KDE Plasma
+ wallshift automatically changes the KDE Plasma desktop wallpaper using
+ 4K images from the Windows Spotlight API, the same source used by
+ Windows 11's lock screen and desktop spotlight features.
+ .
+ It runs as a lightweight daemon with an optional system tray icon
+ (wallshift-tray), avoiding the overhead of larger wallpaper-changer
+ applications such as Variety.

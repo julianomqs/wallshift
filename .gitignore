@@ -4,3 +4,14 @@ __pycache__/
 build/
 dist/
 .venv/
+
+# Artefatos de build do pacote .deb (gerados por dpkg-buildpackage) -
+# o .deb em si é publicado nas releases do GitHub, não commitado no repo.
+.pybuild/
+debian/wallshift/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/*.debhelper.log
+debian/*.debhelper

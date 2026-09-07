@@ -13,6 +13,36 @@ nor support for other DEs.
 
 ## Installation
 
+### .deb package (recommended if you're not touching the code)
+
+Download the latest `.deb` from the [releases page](https://github.com/julianomqs/wallshift/releases) and install it:
+
+```bash
+sudo apt install ./wallshift_*.deb
+```
+
+This installs `wallshift`/`wallshift-tray` into `/usr/bin`, registers the
+application-menu shortcut and autostart for every user on the machine
+(`/etc/xdg/autostart`) - no `pipx` and no need to keep a cloned checkout
+around. To uninstall: `sudo apt remove wallshift` (or `sudo apt purge
+wallshift`, which also removes the autostart entry registered under
+`/etc`).
+
+Neither `remove` nor `purge` touch your data under `~` (the package runs
+as root and has no safe way to know which `$HOME` is yours) - to also wipe
+that, after purging run:
+
+```bash
+rm -rf ~/.config/wallshift ~/.cache/wallshift ~/.local/state/wallshift
+```
+
+To build the `.deb` from source (used to put together each release):
+`sudo apt install debhelper dh-python lintian pybuild-plugin-pyproject
+python3-hatchling python3-all`, then `dpkg-buildpackage -us -uc -b` at the
+repository root.
+
+### Install script (clones the repository, uses pipx)
+
 One-liner, no manual cloning (it self-clones into
 `~/.local/share/wallshift`):
 

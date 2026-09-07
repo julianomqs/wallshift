@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=wallshift
+
+%:
+	dh $@ --buildsystem=pybuild --with python3
+
+# dh_auto_install (via pybuild/hatchling) já cuida do pacote Python e dos
+# executáveis /usr/bin/wallshift e /usr/bin/wallshift-tray (gerados a
+# partir de [project.scripts] no pyproject.toml). O que falta é o que não
+# faz parte do pacote Python em si: o ícone e os atalhos .desktop.
+override_dh_auto_install:
+	dh_auto_install
+
+	install -Dm644 wallshift/icons/hicolor/scalable/status/wallshift.svg \
+		debian/wallshift/usr/share/icons/hicolor/scalable/status/wallshift.svg
+
+	mkdir -p debian/wallshift/usr/share/applications debian/wallshift/etc/xdg/autostart
+
+	# Mesmos templates usados pelo install.sh (pipx) - só muda o valor
+	# substituído nos placeholders: aqui o binário sempre fica num caminho
+	# fixo (/usr/bin), então não precisa do truque de resolver em tempo de
+	# instalação; e o ícone pode ser referenciado pelo nome porque já
+	# instala no local padrão do tema de ícones do sistema.
+	sed -e 's|__WALLSHIFT_TRAY_BIN__|/usr/bin/wallshift-tray|' \
+	    -e 's|__WALLSHIFT_ICON_PATH__|wallshift|' \
+	    wallshift-tray.desktop > debian/wallshift/usr/share/applications/wallshift-tray.desktop
+
+	# /etc/xdg/autostart (não ~/.config/autostart): entrada de autostart
+	# vale pra qualquer usuário da máquina, sem o pacote precisar mexer em
+	# HOME de ninguém no postinst.
+	sed -e 's|__WALLSHIFT_TRAY_BIN__|/usr/bin/wallshift-tray|' \
+	    -e 's|__WALLSHIFT_ICON_PATH__|wallshift|' \
+	    wallshift.desktop > debian/wallshift/etc/xdg/autostart/wallshift-tray.desktop

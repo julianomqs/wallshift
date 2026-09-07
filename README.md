@@ -13,6 +13,36 @@ nem suporte a outros DEs.
 
 ## Instalação
 
+### Pacote .deb (recomendado se você não vai mexer no código)
+
+Baixe o `.deb` mais recente na [página de releases](https://github.com/julianomqs/wallshift/releases) e instale:
+
+```bash
+sudo apt install ./wallshift_*.deb
+```
+
+Isso instala `wallshift`/`wallshift-tray` em `/usr/bin`, registra o atalho
+no menu de aplicativos e o autostart pra qualquer usuário da máquina
+(`/etc/xdg/autostart`) - sem depender de `pipx` nem de manter uma pasta
+clonada por perto. Pra desinstalar: `sudo apt remove wallshift` (ou
+`sudo apt purge wallshift`, que também remove o autostart registrado em
+`/etc`).
+
+Nem o `remove` nem o `purge` tocam nos seus dados em `~` (o pacote roda
+como root e não tem como saber com segurança qual `$HOME` é o seu) - pra
+limpar tudo mesmo, depois do purge rode:
+
+```bash
+rm -rf ~/.config/wallshift ~/.cache/wallshift ~/.local/state/wallshift
+```
+
+Pra gerar o `.deb` a partir do código-fonte (usado pra montar cada
+release): `sudo apt install debhelper dh-python lintian
+pybuild-plugin-pyproject python3-hatchling python3-all` e depois
+`dpkg-buildpackage -us -uc -b` na raiz do repositório.
+
+### Script de instalação (clona o repositório, usa pipx)
+
 Numa linha só, sem clonar nada manualmente (clona sozinho pra
 `~/.local/share/wallshift`):
 
