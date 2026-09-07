@@ -15,7 +15,7 @@ nem suporte a outros DEs.
 
 ### Pacote .deb (recomendado se você não vai mexer no código)
 
-Baixe o `.deb` mais recente na [página de releases](https://github.com/julianomqs/wallshift/releases) e instale:
+Baixe o `.deb` mais recente na [página da última release](https://github.com/julianomqs/wallshift/releases/latest) e instale:
 
 ```bash
 sudo apt install ./wallshift_*.deb

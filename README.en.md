@@ -15,7 +15,7 @@ nor support for other DEs.
 
 ### .deb package (recommended if you're not touching the code)
 
-Download the latest `.deb` from the [releases page](https://github.com/julianomqs/wallshift/releases) and install it:
+Download the latest `.deb` from the [latest release page](https://github.com/julianomqs/wallshift/releases/latest) and install it:
 
 ```bash
 sudo apt install ./wallshift_*.deb
