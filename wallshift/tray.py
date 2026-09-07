@@ -14,8 +14,8 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("AyatanaAppIndicator3", "0.1")
 from gi.repository import GLib, Gtk, AyatanaAppIndicator3 as AppIndicator3
 
-from . import config, notify
-from .main import acquire_single_instance_lock, run_once
+from . import notify
+from .main import CONFIG_ERROR_RETRY_MINUTES, acquire_single_instance_lock, load_config_safe, run_once
 
 # Tempo máximo pro uninstall.sh terminar (pipx uninstall + alguns rm -rf,
 # sem chamada de rede esperada) -- generoso, mas com um teto: sem isso, um
@@ -119,7 +119,13 @@ class WallshiftTrayApp:
         threading.Thread(target=self._run_cycle_in_thread, daemon=True).start()
 
     def _run_cycle_in_thread(self):
-        cfg = config.load_config()
+        # load_config_safe() nunca propaga exceção (já loga sozinho) -
+        # necessário aqui porque essa chamada fica FORA do run_once, então a
+        # rede de segurança dele não cobre um config.toml malformado.
+        cfg = load_config_safe()
+        if cfg is None:
+            GLib.idle_add(self._on_cycle_finished, False, None)
+            return
         success = run_once(cfg)
         GLib.idle_add(self._on_cycle_finished, success, cfg)
 
@@ -136,7 +142,15 @@ class WallshiftTrayApp:
                 "Falha ao trocar o wallpaper - veja os logs no terminal pra detalhes.",
                 urgency=notify.URGENCY_CRITICAL,
             )
-        self._schedule_next_cycle(cfg)
+        # cfg é None quando o config.toml falhou ao carregar (logado em
+        # load_config_safe) - sem cfg["interval_minutes"] pra saber quando
+        # tentar de novo, usa um intervalo curto fixo em vez disso.
+        if cfg is not None:
+            self._schedule_next_cycle(cfg)
+        else:
+            self._cycle_timeout_id = GLib.timeout_add_seconds(
+                CONFIG_ERROR_RETRY_MINUTES * 60, self._on_timer
+            )
         return False  # GLib.idle_add: não repetir
 
     def _schedule_next_cycle(self, cfg):
