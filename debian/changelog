@@ -1,3 +1,11 @@
+wallshift (0.1.1) unstable; urgency=medium
+
+  * Corrige notificações de erro (falha ao trocar wallpaper, falha ao
+    desinstalar, instância duplicada) ficando permanentes na tela: não usam
+    mais urgência crítica, então expiram no tempo padrão do Plasma.
+
+ -- Juliano Marques <julianomqs@gmail.com>  Sun, 20 Sep 2026 22:21:32 -0300
+
 wallshift (0.1.0) unstable; urgency=medium
 
   * Initial release.

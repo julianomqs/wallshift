@@ -140,7 +140,6 @@ class WallshiftTrayApp:
             notify.notify(
                 "wallshift",
                 "Falha ao trocar o wallpaper - veja os logs no terminal pra detalhes.",
-                urgency=notify.URGENCY_CRITICAL,
             )
         # cfg é None quando o config.toml falhou ao carregar (logado em
         # load_config_safe) - sem cfg["interval_minutes"] pra saber quando
@@ -212,7 +211,6 @@ class WallshiftTrayApp:
             notify.notify(
                 "wallshift",
                 f"uninstall.sh não encontrado em {UNINSTALL_SCRIPT} - rode manualmente.",
-                urgency=notify.URGENCY_CRITICAL,
             )
             return
 
@@ -256,7 +254,7 @@ class WallshiftTrayApp:
         if success:
             notify.notify("wallshift desinstalado", message)
         else:
-            notify.notify("wallshift: erro ao desinstalar", message, urgency=notify.URGENCY_CRITICAL)
+            notify.notify("wallshift: erro ao desinstalar", message)
 
         # Sai de qualquer jeito: mesmo com erro parcial (ou timeout), não faz
         # sentido continuar rodando um ícone de um app que acabamos de tentar
@@ -271,7 +269,6 @@ def main():
         notify.notify(
             "wallshift",
             "Já tem uma instância do wallshift rodando (com ou sem ícone na bandeja).",
-            urgency=notify.URGENCY_NORMAL,
         )
         sys.exit(0)
 
