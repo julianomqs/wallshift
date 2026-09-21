@@ -1,6 +1,7 @@
 # wallshift
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/julianomqs/wallshift)](https://github.com/julianomqs/wallshift/releases/latest)
 
 *[Read this in English](README.en.md)*
 
