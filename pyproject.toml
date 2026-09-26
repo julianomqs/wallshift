@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wallshift"
-version = "0.1.1"
+version = "0.1.2"
 description = "Trocador minimalista de papel de parede para KDE Plasma, usando o Windows Spotlight como fonte de imagens."
 readme = "README.md"
 requires-python = ">=3.11"

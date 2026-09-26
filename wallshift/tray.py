@@ -29,7 +29,9 @@ ICONS_DIR = str(Path(__file__).parent / "icons")
 # colidir com ícone de mesmo nome já existente no tema ativo (Breeze,
 # Papirus, ...); o host do StatusNotifierItem (plasmashell) procura primeiro
 # no tema do usuário e só depois no IconThemePath que a gente registra.
-ICON_NAME = "wallshift"
+# É a versão monocromática (wallshift-tray.svg), que segue a cor do tema
+# igual aos outros ícones da bandeja; a colorida fica pros atalhos .desktop.
+ICON_NAME = "wallshift-tray"
 
 # O uninstall.sh é um script solto no checkout do repositório, não faz parte
 # do pacote Python instalado via pipx (que roda isolado num venv). Por isso

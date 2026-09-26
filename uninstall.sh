@@ -14,14 +14,16 @@ else
     echo "    wallshift não está instalado via pipx (ou pipx não encontrado), pulando."
 fi
 
-echo "==> Removendo ícone da bandeja..."
-ICON_FILE="$HOME/.local/share/icons/hicolor/scalable/status/wallshift.svg"
-if [ -f "$ICON_FILE" ]; then
-    rm -f "$ICON_FILE"
-    echo "    removido: $ICON_FILE"
-else
-    echo "    nenhum ícone encontrado em $ICON_FILE"
-fi
+echo "==> Removendo ícones da bandeja..."
+for ICON_FILE in "$HOME/.local/share/icons/hicolor/scalable/status/wallshift.svg" \
+                 "$HOME/.local/share/icons/hicolor/scalable/status/wallshift-tray.svg"; do
+    if [ -f "$ICON_FILE" ]; then
+        rm -f "$ICON_FILE"
+        echo "    removido: $ICON_FILE"
+    else
+        echo "    nenhum ícone encontrado em $ICON_FILE"
+    fi
+done
 
 echo "==> Removendo autostart..."
 if [ -f "$AUTOSTART_FILE" ]; then

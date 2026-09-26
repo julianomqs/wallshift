@@ -1,3 +1,11 @@
+wallshift (0.1.2) unstable; urgency=medium
+
+  * Ícone da bandeja agora é monocromático e segue a cor de texto do tema
+    do Plasma (branco em painel escuro), igual aos ícones nativos. O ícone
+    colorido continua sendo usado no menu de aplicativos.
+
+ -- Juliano Marques <julianomqs@gmail.com>  Sat, 26 Sep 2026 00:25:26 -0300
+
 wallshift (0.1.1) unstable; urgency=medium
 
   * Corrige notificações de erro (falha ao trocar wallpaper, falha ao

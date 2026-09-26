@@ -83,10 +83,11 @@ echo "==> Instalando o ícone da bandeja..."
 ICON_DEST_DIR="$HOME/.local/share/icons/hicolor/scalable/status"
 mkdir -p "$ICON_DEST_DIR"
 cp "$SCRIPT_DIR/wallshift/icons/hicolor/scalable/status/wallshift.svg" "$ICON_DEST_DIR/wallshift.svg"
+cp "$SCRIPT_DIR/wallshift/icons/hicolor/scalable/status/wallshift-tray.svg" "$ICON_DEST_DIR/wallshift-tray.svg"
 if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
 fi
-echo "    ícone instalado em $ICON_DEST_DIR/wallshift.svg"
+echo "    ícones instalados em $ICON_DEST_DIR (wallshift.svg, wallshift-tray.svg)"
 
 echo "==> Preparando configuração em $CONFIG_FILE"
 mkdir -p "$CONFIG_DIR"

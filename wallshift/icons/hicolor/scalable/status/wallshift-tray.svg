@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Versão monocromática só pra bandeja, no mesmo estilo dos ícones
+       nativos do Plasma (Breeze): o Plasma troca a cor de .ColorScheme-Text
+       pela cor de texto do tema ativo, então o ícone fica branco em painel
+       escuro e escuro em painel claro. O #fcfcfc é só o fallback (texto do
+       Breeze Dark) caso o host não faça essa troca. O ícone colorido
+       (wallshift.svg) continua sendo usado nos atalhos .desktop. -->
+  <style id="current-color-scheme">.ColorScheme-Text { color: #fcfcfc; }</style>
+  <circle cx="46" cy="15" r="9" class="ColorScheme-Text" fill="currentColor"/>
+  <path d="M2 56 L24 22 L38 40 L47 28 L62 56 Z" class="ColorScheme-Text" fill="currentColor"/>
+</svg>

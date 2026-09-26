@@ -14,6 +14,8 @@ override_dh_auto_install:
 
 	install -Dm644 wallshift/icons/hicolor/scalable/status/wallshift.svg \
 		debian/wallshift/usr/share/icons/hicolor/scalable/status/wallshift.svg
+	install -Dm644 wallshift/icons/hicolor/scalable/status/wallshift-tray.svg \
+		debian/wallshift/usr/share/icons/hicolor/scalable/status/wallshift-tray.svg
 
 	mkdir -p debian/wallshift/usr/share/applications debian/wallshift/etc/xdg/autostart
 
